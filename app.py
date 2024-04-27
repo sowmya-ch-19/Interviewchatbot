@@ -1,7 +1,4 @@
-import openai
-
-def setup_openai():
-    openai.api_key = 'your-openai-api-key'
+import streamlit as st
 
 def response_filter(response):
     # Check for inappropriate content
@@ -14,54 +11,42 @@ def response_filter(response):
 def safe_print(response):
     # Ensure all responses are appropriate
     safe_response = response_filter(response)
-    print(safe_response)
-
-def start_interview(interview_type):
-    safe_print("Interviewer: Let's begin our discussion.")
-    safe_print(f"Starting the {interview_type} interview.\n")
-    introduction()
-    if interview_type == 'job':
-        discuss_experience()
-        assess_skills()
-        evaluate_company_fit()
-        additional_questions()
-    handle_candidate_questions()
-    conclude_interview()
+    return safe_response
 
 def introduction():
-    name = input("Can you please tell me your name and a little about your background?\nYou: ")
-    conversation_history.append({'role': 'user', 'content': name})
+    name = st.text_input("Can you please tell me your name and a little about your background?")
+    if name:
+        conversation_history.append({'role': 'user', 'content': name})
+    return name
 
-def get_user_input(prompt):
-    user_input = input(f"Interviewer: {prompt}\nYou: ")
-    conversation_history.append({'role': 'user', 'content': user_input})
+def get_user_input(prompt, key):
+    user_input = st.text_input(f"Interviewer: {prompt}", key=key)
+    if user_input:
+        conversation_history.append({'role': 'user', 'content': user_input})
     return user_input
 
 def discuss_experience():
-    last_role = get_user_input("What was your last role and what were your main responsibilities?")
-    contributions = get_user_input("How did your role contribute to the overall goals of your previous company?")
+    last_role = get_user_input("What was your last role and what were your main responsibilities?", key='last_role')
+    contributions = get_user_input("How did your role contribute to the overall goals of your previous company?", key='contributions')
 
 def assess_skills():
-    skills = get_user_input("What specific skills have you developed in your previous roles that are relevant to this job?")
+    skills = get_user_input("What specific skills have you developed in your previous roles that are relevant to this job?", key='skills')
 
 def evaluate_company_fit():
-    fit = get_user_input("How do you think you align with the culture of our company?")
+    fit = get_user_input("How do you think you align with the culture of our company?", key='fit')
 
 def additional_questions():
-    desire_for_job = get_user_input("Why do you want this job?")
-    tough_problem = get_user_input("What's a tough problem you've solved?")
-    biggest_challenge = get_user_input("What are the biggest challenges you have faced?")
-    design_evaluation = get_user_input("Can you describe the best or worst designs you have seen?")
-    product_improvement = get_user_input("Do you have ideas for improving an existing product?")
-    work_preferences = get_user_input("How do you work best, as an individual and as part of a team?")
-    skill_assets = get_user_input("Which of your skills or experiences would be assets in the role and why?")
+    questions = ["Why do you want this job?", "What's a tough problem you've solved?", "What are the biggest challenges you have faced?",
+                 "Can you describe the best or worst designs you have seen?", "Do you have ideas for improving an existing product?",
+                 "How do you work best, as an individual and as part of a team?", "Which of your skills or experiences would be assets in the role and why?"]
+    responses = {q: get_user_input(q, key=f'q{idx}') for idx, q in enumerate(questions)}
 
 def handle_candidate_questions():
-    has_questions = get_user_input("Do you have any questions for us about the job or the company?")
+    has_questions = get_user_input("Do you have any questions for us about the job or the company?", key='has_questions')
     if has_questions.lower() in ['yes', 'y']:
         continue_questions()
     else:
-        safe_print("Interviewer: No worries! Let's proceed.")
+        st.write("Interviewer: No worries! Let's proceed.")
 
 def continue_questions():
     suggested_questions = [
@@ -88,22 +73,31 @@ def continue_questions():
         "The work life at our company is dynamic and exciting but also demanding at times.",
         "We strive for a balanced work/life approach, encouraging team members to take time off as needed."
     ]
-    print("Interviewer: Here are some questions you might consider asking:\n" + "\n".join(f"{i+1}. {q}" for i, q in enumerate(suggested_questions)))
-    index = int(get_user_input("Please select the number of the question you would like to ask:")) - 1
-    safe_print(f"You: {suggested_questions[index]}")
-    safe_print(f"Interviewer: {answers[index]}")  # Provide the answer
-    additional = get_user_input("Do you have any more questions?")
-    if additional.lower() in ['no', 'no more questions', "that's all"]:
-        safe_print("Interviewer: Thank you for your questions.")
-    else:
-        continue_questions()
+    question_index = st.selectbox("Select a question to ask:", list(range(len(suggested_questions))), format_func=lambda x: suggested_questions[x])
+    if st.button("Ask"):
+        st.write(f"You: {suggested_questions[question_index]}")
+        st.write(f"Interviewer: {answers[question_index]}")
+        if st.button("Done with questions", key='done_questions'):
+            st.write("Interviewer: Thank you for your questions.")
+
 
 def conclude_interview():
-    safe_print("Interviewer: Thank you for your time. We will get back to you soon. Have a great day!")
+    st.write("Interviewer: Thank you for your time. We will get back to you soon. Have a great day!")
 
 conversation_history = []
-setup_openai()
+
+def main():
+    st.title("Interview Chatbot")
+    introduction_completed = introduction()
+    if introduction_completed:
+        interview_type = st.radio("Select the type of interview", ('job', 'user_research', 'feedback'))
+        if interview_type == 'job':
+            discuss_experience()
+            assess_skills()
+            evaluate_company_fit()
+            additional_questions()
+        handle_candidate_questions()
+        conclude_interview()
 
 if __name__ == "__main__":
-    interview_type = input("Enter interview type (job/user_research/feedback): ")
-    start_interview(interview_type)
+    main()
