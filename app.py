@@ -3,7 +3,7 @@ import streamlit as st
 import openai
 
 # Set your OpenAI API key securely
-openai.api_key = st.secrets('OPENAI_API_KEY')
+openai.api_key = st.secrets['OPENAI_API_KEY']
 
 def get_response(user_input):
     try:
