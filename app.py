@@ -27,19 +27,18 @@ def main():
         initial_prompt = "Hello! Please describe your recent interview experience or ask any question about improving your interview skills."
         st.session_state.conversation.append(("Assistant", initial_prompt))
 
-    # Display each message as a separate text element
+    # Display each message directly on the page
     for speaker, message in st.session_state.conversation:
         st.text(f"{speaker}: {message}")
 
-    # Handle input key for resetting the input field
-    if 'input_key' not in st.session_state:
-        st.session_state.input_key = 0
+    # Input and button are placed at the bottom
+    with st.sidebar:
+        # Handle input key for resetting the input field
+        if 'input_key' not in st.session_state:
+            st.session_state.input_key = 0
 
-    # Text input for user response at the bottom
-    user_input = st.text_input("Your response:", key=f"input_{st.session_state.input_key}")
-
-    # Send button
-    send_button = st.button("Send")
+        user_input = st.text_input("Your response:", key=f"input_{st.session_state.input_key}")
+        send_button = st.button("Send")
 
     # If the user sends a response
     if send_button and user_input:
