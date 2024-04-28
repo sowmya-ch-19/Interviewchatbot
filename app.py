@@ -4,11 +4,14 @@ import openai
 # Set your OpenAI API key securely
 openai.api_key = st.secrets['OPENAI_API_KEY']
 
-def get_response(user_input, chat_history):
+def get_response(user_input):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=chat_history + [{"role": "user", "content": user_input}],
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant trained to ask insightful follow-up questions about interview experiences."},
+                {"role": "user", "content": user_input}
+            ],
             max_tokens=150
         )
         return response.choices[0].message['content'].strip()
@@ -16,29 +19,35 @@ def get_response(user_input, chat_history):
         return f"An error occurred: {str(e)}"
 
 def main():
-    st.title("Interview Prep Chatbot")
+    st.title("Interactive Interview Experience Chatbot")
 
-    # Initialize conversation list in session state if not already present
-    if 'chat_history' not in st.session_state:
-        st.session_state['chat_history'] = [
-            {"role": "system", "content": "You are a helpful assistant trained to provide guidance on interview preparation, answer questions about interview experiences, and offer tips on interview techniques."}
-        ]
+    # Sidebar for input
+    with st.sidebar:
+        user_input = st.text_input("Type your question here:", key="user_input")
+        send_button = st.button("Send")
 
-    # Text input for user query
-    user_input = st.text_input("How can I help you prepare for your interview?", "")
+    # Initialize or extend conversation history in session state
+    if 'conversation' not in st.session_state:
+        st.session_state['conversation'] = []
 
-    # Process the input when the user submits a question
-    if user_input:
-        st.session_state['chat_history'].append({"role": "user", "content": user_input})
-        response = get_response(user_input, st.session_state['chat_history'])
-        st.session_state['chat_history'].append({"role": "assistant", "content": response})
-        st.session_state['conversation'] = [f"{chat['role']}: {chat['content']}" for chat in st.session_state['chat_history']]
-        user_input = ''  # Clear input box after processing the input
+    # Handle input and response
+    if send_button and user_input:
+        # Update conversation with user input
+        st.session_state['conversation'].append(f"You: {user_input}")
+        # Get response from the model
+        response = get_response(user_input)
+        # Update conversation with the model's response
+        st.session_state['conversation'].append(f"Assistant: {response}")
 
-    # Display conversation history
-    if 'conversation' in st.session_state:
-        conversation_text = "\n".join(st.session_state['conversation'])
-        st.text_area("Conversation", value=conversation_text, height=300, key="conversation_area", disabled=True)
+    # Display conversation
+    if st.session_state['conversation']:
+        for message in st.session_state['conversation']:
+            # Check who is speaking and format accordingly
+            speaker, msg = message.split(":", 1)
+            if speaker == 'You':
+                st.text_area("", value=msg, height=50, key=message[:30], style={"text-align": "right", "color": "blue"})
+            else:
+                st.text_area("", value=msg, height=50, key=message[:30], style={"text-align": "left", "color": "green"})
 
 if __name__ == "__main__":
     main()
