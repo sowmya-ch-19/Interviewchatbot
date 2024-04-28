@@ -20,34 +20,36 @@ def get_response(user_input):
 
 def main():
     st.title("Interactive Interview Experience Chatbot")
-
-    # Sidebar for input
-    with st.sidebar:
-        user_input = st.text_input("Type your question here:", key="user_input")
-        send_button = st.button("Send")
-
-    # Initialize or extend conversation history in session state
+    
+    # Initialize conversation in session state if it does not exist
     if 'conversation' not in st.session_state:
-        st.session_state['conversation'] = []
+        st.session_state.conversation = []
 
-    # Handle input and response
+    # Text input for user question
+    user_input = st.text_input("Type your question here:", key="user_input", on_change=None)
+
+    # Send button
+    send_button = st.button("Send")
+
+    # Container to display the conversation
+    chat_container = st.container()
+
     if send_button and user_input:
-        # Update conversation with user input
-        st.session_state['conversation'].append(f"You: {user_input}")
-        # Get response from the model
+        # Append user message to conversation
+        st.session_state.conversation.append(("You", user_input))
+        # Get AI response
         response = get_response(user_input)
-        # Update conversation with the model's response
-        st.session_state['conversation'].append(f"Assistant: {response}")
+        # Append AI response to conversation
+        st.session_state.conversation.append(("Assistant", response))
+        # Clear input
+        st.session_state.user_input = ""
 
-    # Display conversation
-    if st.session_state['conversation']:
-        for message in st.session_state['conversation']:
-            # Check who is speaking and format accordingly
-            speaker, msg = message.split(":", 1)
-            if speaker == 'You':
-                st.text_area("", value=msg, height=50, key=message[:30], style={"text-align": "right", "color": "blue"})
-            else:
-                st.text_area("", value=msg, height=50, key=message[:30], style={"text-align": "left", "color": "green"})
+    # Display messages
+    for speaker, message in st.session_state.conversation:
+        if speaker == "You":
+            chat_container.write(f"You: {message}", unsafe_allow_html=True)
+        else:
+            chat_container.write(f"Assistant: {message}", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
