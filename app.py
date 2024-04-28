@@ -27,10 +27,9 @@ def main():
         initial_prompt = "Hello! Please describe your recent interview experience or ask any question about improving your interview skills."
         st.session_state.conversation.append(("Assistant", initial_prompt))
 
-    # Display messages in a container
-    with st.container():
-        for speaker, message in st.session_state.conversation:
-            st.text(f"{speaker}: {message}")
+    # Display each message as a separate text element
+    for speaker, message in st.session_state.conversation:
+        st.text(f"{speaker}: {message}")
 
     # Handle input key for resetting the input field
     if 'input_key' not in st.session_state:
