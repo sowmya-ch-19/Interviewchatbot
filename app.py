@@ -24,19 +24,20 @@ def main():
     # Initialize conversation in session state if it does not exist
     if 'conversation' not in st.session_state:
         st.session_state.conversation = []
+        # Start with a greeting and an initial question from the assistant
+        initial_prompt = "Hello! Please describe your recent interview experience or ask any question about improving your interview skills."
+        st.session_state.conversation.append(("Assistant", initial_prompt))
 
-    # Text input for user question. Use a key with a random default value that changes to clear the field.
+    # Handle input key for resetting the input field
     if 'input_key' not in st.session_state:
-        st.session_state.input_key = 0  # Initialize the input key
+        st.session_state.input_key = 0
 
-    user_input = st.text_input("Type your question here:", key=f"input_{st.session_state.input_key}")
+    user_input = st.text_input("Your response:", key=f"input_{st.session_state.input_key}")
 
     # Send button
     send_button = st.button("Send")
 
-    # Container to display the conversation
-    chat_container = st.container()
-
+    # If the user sends a response
     if send_button and user_input:
         # Append user message to conversation
         st.session_state.conversation.append(("You", user_input))
@@ -47,8 +48,8 @@ def main():
         # Increment the input key to reset the text input field
         st.session_state.input_key += 1
 
-    # Display messages
-    with chat_container:
+    # Display messages in a container
+    with st.container():
         for speaker, message in st.session_state.conversation:
             st.text(f"{speaker}: {message}")
 
