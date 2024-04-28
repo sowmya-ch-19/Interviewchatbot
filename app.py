@@ -25,18 +25,17 @@ def main():
     if 'conversation' not in st.session_state:
         st.session_state.conversation = []
 
-    # Handle input key for resetting the input field
+    # Text input for user question. Use a key with a random default value that changes to clear the field.
     if 'input_key' not in st.session_state:
-        st.session_state.input_key = 0
+        st.session_state.input_key = 0  # Initialize the input key
+
+    user_input = st.text_input("Type your question here:", key=f"input_{st.session_state.input_key}")
 
     # Send button
     send_button = st.button("Send")
 
-    # Text input for user question. Increment key before displaying the input field if send_button was clicked.
-    if send_button:
-        st.session_state.input_key += 1  # Increment the input key to reset the text input field
-
-    user_input = st.text_input("Type your question here:", key=f"input_{st.session_state.input_key}")
+    # Container to display the conversation
+    chat_container = st.container()
 
     if send_button and user_input:
         # Append user message to conversation
@@ -45,9 +44,11 @@ def main():
         response = get_response(user_input)
         # Append AI response to conversation
         st.session_state.conversation.append(("Assistant", response))
+        # Increment the input key to reset the text input field
+        st.session_state.input_key += 1
 
-    # Display messages in a container
-    with st.container():
+    # Display messages
+    with chat_container:
         for speaker, message in st.session_state.conversation:
             st.text(f"{speaker}: {message}")
 
