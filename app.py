@@ -29,16 +29,17 @@ def main():
 
     # Display each message directly on the page
     for speaker, message in st.session_state.conversation:
-        st.text(f"{speaker}: {message}")
+        if speaker == "Assistant":
+            st.info(f"{speaker}: {message}")  # Use st.info for assistant messages for visual distinction
+        else:
+            st.text(f"{speaker}: {message}")  # Use st.text for user messages
 
     # Input and button are placed at the bottom
-    with st.sidebar:
-        # Handle input key for resetting the input field
-        if 'input_key' not in st.session_state:
-            st.session_state.input_key = 0
+    if 'input_key' not in st.session_state:
+        st.session_state.input_key = 0
 
-        user_input = st.text_input("Your response:", key=f"input_{st.session_state.input_key}")
-        send_button = st.button("Send")
+    user_input = st.text_input("Your response:", key=f"input_{st.session_state.input_key}")
+    send_button = st.button("Send")
 
     # If the user sends a response
     if send_button and user_input:
