@@ -1,75 +1,45 @@
 import streamlit as st
 import openai
 
-# Initialize session state for the conversation history if not already present
-if 'history' not in st.session_state:
-    st.session_state['history'] = []
+# Set your OpenAI API key securely
+openai.api_key = st.secrets['OPENAI_API_KEY']
 
 def get_response(user_input):
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
-    conversation_history = st.session_state['history']
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=conversation_history + [{"role": "user", "content": user_input}],
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant trained to ask insightful follow-up questions about interview experiences."},
+                {"role": "user", "content": user_input}
+            ],
             max_tokens=150
         )
-        # Append both user and assistant messages to the history
-        conversation_history.append({"role": "user", "content": user_input})
-        conversation_history.append({"role": "assistant", "content": response.choices[0].message['content']})
-        st.session_state['history'] = conversation_history
         return response.choices[0].message['content'].strip()
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-def load_css():
-    st.markdown("""
-        <style>
-        .stTextInput>label {display: none;}
-        .stButton>label {display: none;}
-        .info, .success {
-            border-radius: 10px;
-            padding: 10px;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-def main():
-    load_css()
-    st.title("Interactive Interview Experience Chatbot")
-    ...
-
-
-
 def main():
     st.title("Interactive Interview Experience Chatbot")
 
-    # Define container for the chat display
-    chat_container = st.container()
-    input_container = st.container()
+    # Initialize conversation list in session state if not already present
+    if 'conversation' not in st.session_state:
+        st.session_state['conversation'] = []
 
-    with input_container:
-        user_input = st.text_input("Type your message here:", key="chat_input")
-        if st.button("Send"):
-            if user_input:
-                get_response(user_input)
-                st.session_state.chat_input = ""  # Clear input field
+    # Text input for user query
+    user_input = st.text_input("Your question:", "")
 
-    with chat_container:
-        for i, message in enumerate(st.session_state['history']):
-            # Differentiate user and assistant messages in layout
-            if message['role'] == 'user':
-                col1, col2 = st.columns([1, 5])
-                with col1:
-                    st.write("You:")
-                with col2:
-                    st.info(message['content'])
-            elif message['role'] == 'assistant':
-                col1, col2 = st.columns([5, 1])
-                with col1:
-                    st.success(message['content'])
-                with col2:
-                    st.write("Assistant:")
+    # On pressing Enter after input
+    if st.session_state['conversation'] or user_input:
+        if user_input:
+            st.session_state['conversation'].append(f"You: {user_input}")
+            response = get_response(user_input)
+            st.session_state['conversation'].append(f"Assistant: {response}")
+            user_input = ''  # Clear input box after processing the input
+
+    # Display conversation history
+    if st.session_state['conversation']:
+        conversation_text = "\n".join(st.session_state['conversation'])
+        st.text_area("Conversation", value=conversation_text, height=300, key="conversation_area", disabled=True)
 
 if __name__ == "__main__":
     main()
